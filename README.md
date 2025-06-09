@@ -23,7 +23,7 @@ An AI-powered Obsidian plugin that automatically generates comprehensive vocabul
 ## 📋 Requirements
 
 - Obsidian(yeah ofcourse)
-- Google Gemini API key (it's free if you're broken)
+- Google Gemini API key (it's free if you're broke)
 - Internet connection for AI generation
 
 ## ⚙️ Installation
