@@ -1,85 +1,160 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Editor, MarkdownView, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { GoogleGenAI } from "@google/genai";
 
-// Remember to rename these classes and interfaces!
-
-interface MyPluginSettings {
-	mySetting: string;
+interface VocabGenSettings {
+	apiKey: string;
+	prompt: string;
+	model: string;
+	useCustomModel: boolean;
+	customModel: string;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
+const DEFAULT_SETTINGS: VocabGenSettings = {
+	apiKey: '',
+	prompt: 'Generate a comprehensive vocabulary definition with examples, etymology, and usage for the word: {}',
+	model: 'gemini-2.0-flash',
+	useCustomModel: false,
+	customModel: 'gemini-2.0-flash'
 }
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+// Available Gemini models with descriptions (reduced to most popular)
+const GEMINI_MODELS = [
+	{ value: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash (Recommended)', desc: 'Latest, fast, and balanced' },
+	{ value: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', desc: 'Stable, fast, cost-effective' },
+	{ value: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', desc: 'More capable, detailed responses' }
+];
+
+export default class VocabGenPlugin extends Plugin {
+	settings: VocabGenSettings;
 
 	async onload() {
 		await this.loadSettings();
+		this.registerContextMenu();
+		this.addSettingTab(new VocabGenSettingTab(this.app, this));
+	}
 
-		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
-		});
-		// Perform additional things with the ribbon
-		ribbonIconEl.addClass('my-plugin-ribbon-class');
+	/**
+	 * Register the context menu item for vocabulary generation
+	 */
+	private registerContextMenu(): void {
+		this.registerEvent(
+			this.app.workspace.on('editor-menu', (menu, editor: Editor, view: MarkdownView) => {
+				menu.addItem((item) => {
+					item
+						.setTitle('Generate Vocabulary')
+						.setIcon('book-open')
+						.onClick(async () => {
+							await this.handleVocabGeneration(editor);
+						});
+				});
+			})
+		);
+	}
 
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
+	/**
+	 * Handle the vocabulary generation process
+	 */
+	private async handleVocabGeneration(editor: Editor): Promise<void> {
+		const selectedText = editor.getSelection().trim();
+		
+		if (!selectedText) {
+			new Notice('Please select text first');
+			return;
+		}
 
-		// This adds a simple command that can be triggered anywhere
-		this.addCommand({
-			id: 'open-sample-modal-simple',
-			name: 'Open sample modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
+		try {
+			// Replace selected text with wikilink
+			const wikilink = `[[vocab.${selectedText}|${selectedText}]]`;
+			editor.replaceSelection(wikilink);
+			
+			// Generate and save vocabulary file
+			await this.createOrUpdateVocabFile(selectedText);
+			
+		} catch (error) {
+			console.error('Vocab generation error:', error);
+			new Notice(`Error: ${error.message}`);
+		}
+	}
+
+	/**
+	 * Create or update the vocabulary file with AI-generated content
+	 */
+	private async createOrUpdateVocabFile(word: string): Promise<void> {
+		const fileName = `vocab.${word}.md`;
+		const fileExists = await this.app.vault.adapter.exists(fileName);
+		
+		// Generate AI content
+		const aiContent = await this.generateAIContent(word);
+		
+		if (!fileExists) {
+			// Check if AI content already has a header/title
+			const hasHeader = aiContent.trim().startsWith('#') || 
+							 aiContent.trim().startsWith('**') ||
+							 aiContent.toLowerCase().includes(word.toLowerCase()) && aiContent.trim().split('\n')[0].length < 100;
+			
+			// Only add header if AI content doesn't already have one
+			const finalContent = hasHeader ? aiContent : `# ${word}\n\n${aiContent}`;
+			
+			await this.app.vault.create(fileName, finalContent + '\n');
+			new Notice(`Created vocabulary file: ${fileName}`);
+		} else {
+			// Append to existing file
+			const file = this.app.vault.getFileByPath(fileName);
+			if (file) {
+				const content = await this.app.vault.read(file);
+				await this.app.vault.modify(file, content + `\n---\n\n${aiContent}\n`);
+				new Notice(`Updated vocabulary file: ${fileName}`);
 			}
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'sample-editor-command',
-			name: 'Sample editor command',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection('Sample Editor Command');
+		}
+	}
+
+	/**
+	 * Generate AI content using Gemini API
+	 */
+	private async generateAIContent(word: string): Promise<string> {
+		// Check if API key is configured
+		if (!this.settings.apiKey) {
+			return `**${word}**\n\n*Please configure your Gemini API key in plugin settings to generate AI content.*`;
+		}
+
+		try {
+			const ai = new GoogleGenAI({ apiKey: this.settings.apiKey });
+			
+			// Replace {} placeholder with the word, or append if no placeholder exists
+			const promptText = this.settings.prompt.includes('{}') 
+				? this.settings.prompt.replace('{}', word)
+				: this.settings.prompt + word;
+			
+			// Get the model to use
+			const modelToUse = this.settings.useCustomModel ? this.settings.customModel : this.settings.model;
+			
+			const response = await ai.models.generateContent({
+				model: modelToUse,
+				contents: promptText,
+			});
+
+			const aiResponse = response.text;
+			
+			if (!aiResponse) {
+				throw new Error('No content generated by AI');
 			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-sample-modal-complex',
-			name: 'Open sample modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
 
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
+			return aiResponse;
+			
+		} catch (error) {
+			console.error('AI generation error:', error);
+			
+			// Return a helpful error message instead of throwing
+			if (error.message.includes('API key')) {
+				return `**${word}**\n\n*Invalid API key. Please check your Gemini API key in plugin settings.*`;
 			}
-		});
-
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+			
+			return `**${word}**\n\n*Error generating AI content: ${error.message}*`;
+		}
 	}
 
 	onunload() {
-
+		// Plugin cleanup - no specific cleanup needed for this plugin
 	}
 
 	async loadSettings() {
@@ -91,45 +166,166 @@ export default class MyPlugin extends Plugin {
 	}
 }
 
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
+class VocabGenSettingTab extends PluginSettingTab {
+	plugin: VocabGenPlugin;
 
-	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-	}
-}
-
-class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
-
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: VocabGenPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
 
 	display(): void {
-		const {containerEl} = this;
+		const { containerEl } = this;
 
 		containerEl.empty();
 
+		// Header
+		containerEl.createEl('h2', { text: 'Vocabulary Generator Settings' });
+
+		// Description
+		containerEl.createEl('p', {
+			text: 'Configure your Gemini AI integration for intelligent vocabulary generation.'
+		});
+
+		// Model Setting
 		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
+			.setName('Gemini Model')
+			.setDesc('Choose which Gemini AI model to use for vocabulary generation')
+			.addDropdown(dropdown => {
+				GEMINI_MODELS.forEach(model => {
+					dropdown.addOption(model.value, model.name);
+				});
+				dropdown.setValue(this.plugin.settings.model)
+					.onChange(async (value) => {
+						this.plugin.settings.model = value;
+						await this.plugin.saveSettings();
+						// Update model description dynamically
+						if (!this.plugin.settings.useCustomModel) {
+							const selectedModel = GEMINI_MODELS.find(m => m.value === value);
+							modelDescEl.textContent = selectedModel ? selectedModel.desc : 'Select a model above';
+						}
+					});
+				// Hide dropdown if custom model is enabled
+				dropdown.selectEl.style.display = this.plugin.settings.useCustomModel ? 'none' : 'block';
+			});
+
+		// Add model descriptions
+		const modelDescEl = containerEl.createDiv({ cls: 'setting-item-description' });
+		modelDescEl.style.marginTop = '-10px';
+		modelDescEl.style.marginBottom = '20px';
+		modelDescEl.style.fontStyle = 'italic';
+		modelDescEl.style.color = 'var(--text-muted)';
+		const selectedModel = GEMINI_MODELS.find(m => m.value === this.plugin.settings.model);
+		modelDescEl.textContent = this.plugin.settings.useCustomModel 
+			? `Custom model: ${this.plugin.settings.customModel}` 
+			: (selectedModel ? selectedModel.desc : 'Select a model above');
+
+		// Custom Model Toggle
+		new Setting(containerEl)
+			.setName('Use Custom Model')
+			.setDesc('Enable this to enter your own model name instead of using the predefined options')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.useCustomModel)
 				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
+					this.plugin.settings.useCustomModel = value;
 					await this.plugin.saveSettings();
+					
+					// Toggle UI elements
+					const dropdown = containerEl.querySelector('.dropdown') as HTMLSelectElement;
+					const customInput = containerEl.querySelector('#custom-model-input') as HTMLInputElement;
+					
+					if (dropdown) dropdown.style.display = value ? 'none' : 'block';
+					if (customInput) customInput.style.display = value ? 'block' : 'none';
+					
+					// Update description
+					if (value) {
+						modelDescEl.textContent = `Custom model: ${this.plugin.settings.customModel}`;
+					} else {
+						const selectedModel = GEMINI_MODELS.find(m => m.value === this.plugin.settings.model);
+						modelDescEl.textContent = selectedModel ? selectedModel.desc : 'Select a model above';
+					}
 				}));
+
+		// Custom Model Input
+		new Setting(containerEl)
+			.setName('Custom Model Name')
+			.setDesc('Enter the exact model name (e.g., gemini-2.0-flash-exp, gemini-1.5-flash-001)')
+			.addText(text => {
+				text.setPlaceholder('gemini-2.0-flash-exp')
+					.setValue(this.plugin.settings.customModel)
+					.onChange(async (value) => {
+						this.plugin.settings.customModel = value;
+						await this.plugin.saveSettings();
+						// Update description if using custom model
+						if (this.plugin.settings.useCustomModel) {
+							modelDescEl.textContent = `Custom model: ${value}`;
+						}
+					});
+				text.inputEl.id = 'custom-model-input';
+				text.inputEl.style.display = this.plugin.settings.useCustomModel ? 'block' : 'none';
+				text.inputEl.style.width = '100%';
+				text.inputEl.style.fontFamily = 'monospace';
+			});
+
+		// API Key Setting
+		new Setting(containerEl)
+			.setName('Gemini API Key')
+			.setDesc('Your Google Gemini API key for AI content generation')
+			.addText(text => {
+				text.setPlaceholder('Enter your API key here...')
+					.setValue(this.plugin.settings.apiKey)
+					.onChange(async (value) => {
+						this.plugin.settings.apiKey = value.trim();
+						await this.plugin.saveSettings();
+					});
+				// Make the input field wider
+				text.inputEl.style.width = '100%';
+				text.inputEl.style.minWidth = '400px';
+			});
+
+		// Prompt Setting
+		new Setting(containerEl)
+			.setName('AI Prompt Template')
+			.setDesc('Customize how vocabulary content is generated. Use {} as a placeholder for the selected word. If no {} is found, the word will be appended to the end.')
+			.addTextArea(text => {
+				text.setPlaceholder('Define the word {} with examples and etymology...')
+					.setValue(this.plugin.settings.prompt)
+					.onChange(async (value) => {
+						this.plugin.settings.prompt = value;
+						await this.plugin.saveSettings();
+					});
+				// Make the text area larger and more readable
+				text.inputEl.style.width = '100%';
+				text.inputEl.style.height = '120px';
+				text.inputEl.style.resize = 'vertical';
+				text.inputEl.style.fontFamily = 'monospace';
+			});
+
+		// Help section
+		const helpEl = containerEl.createDiv();
+		helpEl.createEl('h3', { text: 'Setup Instructions' });
+		
+		const instructionsEl = helpEl.createEl('ol');
+		instructionsEl.createEl('li', { text: 'Get your free API key from Google AI Studio' });
+		instructionsEl.createEl('li', { text: 'Paste it in the API Key field above' });
+		instructionsEl.createEl('li', { text: 'Customize the prompt using {} as placeholder for the word' });
+		instructionsEl.createEl('li', { text: 'Select any word in your notes and right-click to generate vocabulary' });
+
+		// Examples section
+		const examplesEl = helpEl.createDiv();
+		examplesEl.createEl('h4', { text: 'Example Prompts:' });
+		const examplesList = examplesEl.createEl('ul');
+		examplesList.createEl('li', { text: 'Define the word {} with examples and etymology' });
+		examplesList.createEl('li', { text: 'I want definition of {} and its synonyms' });
+		examplesList.createEl('li', { text: 'Explain {} in simple terms with 3 example sentences' });
+		examplesList.createEl('li', { text: 'Generate academic vocabulary entry for: {}' });
+
+		// API Key link
+		const linkEl = helpEl.createEl('p');
+		linkEl.appendText('Get your API key: ');
+		linkEl.createEl('a', {
+			text: 'Google AI Studio',
+			href: 'https://aistudio.google.com/app/apikey'
+		});
 	}
 }
-//

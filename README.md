@@ -1,94 +1,228 @@
-# Obsidian Sample Plugin
+# Vocabulary Generator - a vibe-coded Obsidian Plugin(yeah this README too)
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+An AI-powered Obsidian plugin that automatically generates comprehensive vocabulary entries using Google Gemini AI. Transform any selected word into a detailed vocabulary file with definitions, examples, etymology, and more.
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+## ✨ Features
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+- **🤖 AI-Powered**: Uses Google Gemini AI with multiple model options
+- **🎛️ Model Selection**: Choose from curated models or enter custom model names
+- **🔗 Smart Linking**: Automatically creates wikilinks and vocabulary files
+- **🎯 Flexible Prompts**: Use `{}` placeholder for complete control over prompt structure
+- **📁 File Management**: Creates new files or appends to existing vocabulary files
+- **⚙️ Highly Configurable**: Custom API keys, prompts, and AI models
+- **🎨 User-Friendly**: Intuitive right-click context menu integration
+- **🧠 Smart Headers**: Avoids duplicate titles when AI generates its own
 
-## First time developing plugins?
+## 🚀 Quick Start
 
-Quick starting guide for new plugin devs:
+1. **Install the plugin** in Obsidian
+2. **Get a free API key** from [Google AI Studio](https://aistudio.google.com/app/apikey)
+3. **Configure** the plugin in Settings → Vocabulary Generator
+4. **Select any word** in your notes and right-click → "Generate Vocabulary"
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+## 📋 Requirements
 
-## Releasing new releases
+- Obsidian v0.15.0 or higher
+- Google Gemini API key (free tier available)
+- Internet connection for AI generation
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+## ⚙️ Installation
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+### From Obsidian Community Plugins (Recommended)
+1. Open Obsidian Settings
+2. Go to Community Plugins
+3. Search for "Vocabulary Generator"
+4. Install and enable the plugin
 
-## Adding your plugin to the community plugin list
+### Manual Installation
+1. Download the latest release from GitHub
+2. Extract files to `.obsidian/plugins/vocab-generator/`
+3. Enable the plugin in Obsidian settings
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+## 🔧 Configuration
 
-## How to use
+### 1. Get Your API Key
+- Visit [Google AI Studio](https://aistudio.google.com/app/apikey)
+- Sign in with your Google account
+- Create a new API key
+- Copy the key for use in the plugin
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+### 2. Configure Settings
+1. Go to **Settings** → **Vocabulary Generator**
+2. Paste your API key in the **Gemini API Key** field
+3. Choose your preferred **AI model** (or enable custom models)
+4. Customize your **AI Prompt Template** (optional)
 
-## Manually installing the plugin
+### 3. Model Selection
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+#### **Predefined Models** (Recommended for most users)
+- **Gemini 2.0 Flash** ⭐ - Latest, fast, and balanced
+- **Gemini 1.5 Flash** - Stable, fast, cost-effective  
+- **Gemini 1.5 Pro** - More capable, detailed responses
 
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint .\src\`
+#### **Custom Models** (Advanced users)
+- Enable "Use Custom Model" checkbox
+- Enter any Gemini model name manually
+- Examples: `gemini-2.0-flash-exp`, `gemini-1.5-flash-001`, `gemini-2.0-flash-thinking-exp`
 
-## Funding URL
+### 4. Prompt Customization
+Use `{}` as a placeholder for the selected word in your prompt:
 
-You can include funding URLs where people who use your plugin can financially support it.
+#### Example Prompts:
+```
+Define the word {} with examples and etymology
 
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
+I want definition of {} and its synonyms
 
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
+Explain {} in simple terms with 3 example sentences
+
+Give me a detailed vocabulary breakdown for the word {}. Include:
+- Its pronunciation in IPA
+- Its meaning in Vietnamese
+- All English definitions
+- Example sentences for each definition
 ```
 
-If you have multiple URLs, you can also do:
+## 📚 Usage
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
+### Basic Usage
+1. **Select text** in any note
+2. **Right-click** to open context menu
+3. **Click "Generate Vocabulary"**
+4. The plugin will:
+   - Replace selected text with `[[vocab.word|word]]`
+   - Create/update `vocab.word.md` with AI-generated content
+
+### Advanced Features
+
+#### Custom Prompts with Placeholders
+- Use `{}` placeholder for flexible word positioning
+- Create prompts for specific learning styles or languages
+- Generate academic, casual, or specialized vocabulary entries
+
+#### Model Flexibility
+- **Quick selection**: Choose from proven, fast models
+- **Advanced control**: Use cutting-edge experimental models
+- **Version specific**: Target exact model versions for consistency
+
+#### Smart File Organization
+- **New files**: Creates `vocab.word.md` with fresh content
+- **Existing files**: Appends new content with separator (`---`)
+- **Smart headers**: Avoids duplicate titles when AI generates its own
+
+## 📖 Examples
+
+### Input
+Selected text: `serendipity`
+Prompt: `Give me a detailed vocabulary breakdown for the word {}. Include pronunciation, meaning, and examples.`
+
+### Output
+**File created**: `vocab.serendipity.md`
+**Wikilink**: `[[vocab.serendipity|serendipity]]`
+
+**Generated content** (example with Gemini 2.0 Flash):
+```markdown
+Here's a detailed vocabulary breakdown for "serendipity":
+
+**Pronunciation (IPA):** /ˌsɛrənˈdɪpɪti/
+
+**Definition:** The occurrence and development of events by chance in a happy or beneficial way.
+
+**Etymology:** Coined by Horace Walpole in 1754, from the Persian fairy tale "The Three Princes of Serendip."
+
+**Example sentences:**
+1. Finding that rare book at the garage sale was pure serendipity.
+2. Their meeting was a serendipity that changed both their lives.
+
+**Synonyms:** chance, fortune, luck, accident, fate
 ```
 
-## API Documentation
+## 🛠️ Development
 
-See https://github.com/obsidianmd/obsidian-api
+### Building from Source
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/obsidian-vocab-generator
+
+# Install dependencies
+npm install
+
+# Build the plugin
+npm run build
+```
+
+### Project Structure
+```
+├── main.ts              # Main plugin code
+├── manifest.json        # Plugin manifest
+├── package.json         # Dependencies
+├── tsconfig.json        # TypeScript config
+└── README.md           # Documentation
+```
+
+## 🔒 Privacy & Security
+
+- **API Key Security**: Your API key is stored locally in Obsidian
+- **No Data Collection**: The plugin doesn't collect or store user data
+- **Direct API Calls**: Communications go directly to Google Gemini
+- **Offline Fallback**: Shows helpful messages when API is unavailable
+
+## 🔮 Future Work
+
+### Planned Features
+- **🌐 Wider AI Integration**: Expand beyond vocabulary to support:
+  - **Concept explanations** for complex topics
+  - **Historical event summaries** with key facts
+  - **Scientific term definitions** with formulas and examples
+  - **Code documentation** generation for programming terms
+  - **Language learning** support for multiple languages
+
+- **📚 Content Types**: 
+  - Academic research summaries
+  - Technical documentation generation
+  - Creative writing prompts
+  - Study guide creation
+
+- **🎯 Specialized Templates**:
+  - Subject-specific prompts (Science, History, Literature)
+  - Learning level adaptation (Beginner, Intermediate, Advanced)
+  - Multi-language support with translations
+
+### Vision
+Transform this from a vocabulary-focused tool into a **comprehensive AI-powered knowledge assistant** that can generate contextual, educational content for any selected text across all domains of study.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+### Priority Areas
+- Additional AI model integrations
+- Template system for different content types
+- Multi-language support
+- Performance optimizations
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🐛 Support
+
+- **Issues**: Report bugs on [GitHub Issues](https://github.com/yourusername/obsidian-vocab-generator/issues)
+- **Discussions**: Join conversations in [GitHub Discussions](https://github.com/yourusername/obsidian-vocab-generator/discussions)
+- **Documentation**: Check this README for usage help
+
+## 🙏 Acknowledgments
+
+- Built for the amazing [Obsidian](https://obsidian.md) community
+- Powered by [Google Gemini AI](https://ai.google.dev)
+- Inspired by the need for better vocabulary learning tools and AI-assisted knowledge building
+
+---
+
+**Made with ❤️ for knowledge workers, students, and lifelong learners**
