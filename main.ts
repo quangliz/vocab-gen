@@ -132,3 +132,4 @@ class SampleSettingTab extends PluginSettingTab {
 				}));
 	}
 }
+//
