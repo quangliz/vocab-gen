@@ -1,4 +1,4 @@
-# Vocabulary Generator - a vibe-coded Obsidian Plugin(yeah this README too)
+# Vocabulary Generator
 
 An AI-powered Obsidian plugin that automatically generates comprehensive vocabulary entries using Google Gemini AI. Transform any selected word into a detailed vocabulary file with definitions, examples, etymology, and more.
 
@@ -22,21 +22,19 @@ An AI-powered Obsidian plugin that automatically generates comprehensive vocabul
 
 ## 📋 Requirements
 
-- Obsidian v0.15.0 or higher
-- Google Gemini API key (free tier available)
+- Obsidian(yeah ofcourse)
+- Google Gemini API key (it's free if you're broken)
 - Internet connection for AI generation
 
 ## ⚙️ Installation
 
-### From Obsidian Community Plugins (Recommended)
-1. Open Obsidian Settings
-2. Go to Community Plugins
-3. Search for "Vocabulary Generator"
-4. Install and enable the plugin
-
 ### Manual Installation
 1. Download the latest release from GitHub
-2. Extract files to `.obsidian/plugins/vocab-generator/`
+or clone this repo:
+```
+git clone https://github.com/quangliz/vocab-gen.git
+```
+2. Extract/Move folder to `.obsidian/plugins/`
 3. Enable the plugin in Obsidian settings
 
 ## 🔧 Configuration
@@ -56,14 +54,14 @@ An AI-powered Obsidian plugin that automatically generates comprehensive vocabul
 ### 3. Model Selection
 
 #### **Predefined Models** (Recommended for most users)
-- **Gemini 2.0 Flash** ⭐ - Latest, fast, and balanced
-- **Gemini 1.5 Flash** - Stable, fast, cost-effective  
-- **Gemini 1.5 Pro** - More capable, detailed responses
+- **Gemini 2.5 Flash Preview 05-20** ⭐ - Latest and free
+- **Gemini 2.0 Flash** I dont know, experience it yourself
+- ...
 
 #### **Custom Models** (Advanced users)
 - Enable "Use Custom Model" checkbox
 - Enter any Gemini model name manually
-- Examples: `gemini-2.0-flash-exp`, `gemini-1.5-flash-001`, `gemini-2.0-flash-thinking-exp`
+- Examples: `gemini-2.5-flash-preview-05-20`, `gemini-2.0-flash-exp`
 
 ### 4. Prompt Customization
 Use `{}` as a placeholder for the selected word in your prompt:

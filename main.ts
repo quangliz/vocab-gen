@@ -12,16 +12,15 @@ interface VocabGenSettings {
 const DEFAULT_SETTINGS: VocabGenSettings = {
 	apiKey: '',
 	prompt: 'Generate a comprehensive vocabulary definition with examples, etymology, and usage for the word: {}',
-	model: 'gemini-2.0-flash',
+	model: 'gemini-2.5-flash-preview-05-20',
 	useCustomModel: false,
-	customModel: 'gemini-2.0-flash'
+	customModel: 'gemini-2.5-flash-preview-05-20'
 }
 
 // Available Gemini models with descriptions (reduced to most popular)
 const GEMINI_MODELS = [
-	{ value: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash (Recommended)', desc: 'Latest, fast, and balanced' },
-	{ value: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', desc: 'Stable, fast, cost-effective' },
-	{ value: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', desc: 'More capable, detailed responses' }
+	{ value: 'gemini-2.5-flash-preview-05-20', name: 'Gemini 2.5 Flash Preview 05-20 (Recommended)', desc: 'Latest, fast, and balanced' },
+	{ value: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', desc: 'Stable, fast, cost-effective' }
 ];
 
 export default class VocabGenPlugin extends Plugin {
