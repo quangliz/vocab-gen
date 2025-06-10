@@ -4,7 +4,7 @@
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
 	"description": "AI-powered vocabulary generator using Google Gemini. Create vocabulary files with definitions, examples, and wikilinks.",
-	"author": "Your Name",
-	"authorUrl": "https://github.com/yourusername",
+	"author": "quangliz",
+	"authorUrl": "https://github.com/quangliz",
 	"isDesktopOnly": false
 }
