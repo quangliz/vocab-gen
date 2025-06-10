@@ -141,6 +141,7 @@ Here's a detailed vocabulary breakdown for "serendipity":
 ```bash
 # Clone the repository
 git clone https://github.com/quangliz/vocab-gen-obsidian.git
+cd vocab-gen-obsidian
 
 # Install dependencies
 npm install
