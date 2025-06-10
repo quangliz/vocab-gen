@@ -7,14 +7,16 @@ interface VocabGenSettings {
 	model: string;
 	useCustomModel: boolean;
 	customModel: string;
+	noteNamePattern: string;
 }
 
 const DEFAULT_SETTINGS: VocabGenSettings = {
 	apiKey: '',
 	prompt: 'Generate a comprehensive vocabulary definition with examples, etymology, and usage for the word: {}',
-	model: 'gemini-2.5-flash-preview-05-20',
+	model: 'gemini-2.0-flash',
 	useCustomModel: false,
-	customModel: 'gemini-2.5-flash-preview-05-20'
+	customModel: 'gemini-2.0-flash',
+	noteNamePattern: '[[vocab.{}|{}]]'
 }
 
 // Available Gemini models with descriptions (reduced to most popular)
@@ -62,12 +64,15 @@ export default class VocabGenPlugin extends Plugin {
 		}
 
 		try {
-			// Replace selected text with wikilink
-			const wikilink = `[[vocab.${selectedText}|${selectedText}]]`;
+			// Generate wikilink using custom pattern
+			const wikilink = this.settings.noteNamePattern.replace(/{}/g, selectedText);
 			editor.replaceSelection(wikilink);
 			
+			// Extract filename from the wikilink pattern
+			const fileName = this.extractFileName(this.settings.noteNamePattern, selectedText);
+			
 			// Generate and save vocabulary file
-			await this.createOrUpdateVocabFile(selectedText);
+			await this.createOrUpdateVocabFile(selectedText, fileName);
 			
 		} catch (error) {
 			console.error('Vocab generation error:', error);
@@ -76,10 +81,26 @@ export default class VocabGenPlugin extends Plugin {
 	}
 
 	/**
+	 * Extract filename from the note pattern
+	 */
+	private extractFileName(pattern: string, word: string): string {
+		// Replace {} with the word in the pattern
+		const fullPattern = pattern.replace(/{}/g, word);
+		
+		// Extract filename from wikilink format [[filename|display]] or [[filename]]
+		const wikilinkMatch = fullPattern.match(/\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/);
+		if (wikilinkMatch) {
+			return `${wikilinkMatch[1]}.md`;
+		}
+		
+		// If not a wikilink format, use the pattern directly as filename
+		return `${fullPattern}.md`;
+	}
+
+	/**
 	 * Create or update the vocabulary file with AI-generated content
 	 */
-	private async createOrUpdateVocabFile(word: string): Promise<void> {
-		const fileName = `vocab.${word}.md`;
+	private async createOrUpdateVocabFile(word: string, fileName: string): Promise<void> {
 		const fileExists = await this.app.vault.adapter.exists(fileName);
 		
 		// Generate AI content
@@ -300,6 +321,50 @@ class VocabGenSettingTab extends PluginSettingTab {
 				text.inputEl.style.fontFamily = 'monospace';
 			});
 
+		// Note Naming Pattern Setting
+		new Setting(containerEl)
+			.setName('Note Naming Pattern')
+			.setDesc('Customize how wikilinks and note names are generated. Use {} as placeholder for the selected word.')
+			.addText(text => {
+				text.setPlaceholder('[[vocab.{}|{}]]')
+					.setValue(this.plugin.settings.noteNamePattern)
+					.onChange(async (value) => {
+						this.plugin.settings.noteNamePattern = value;
+						await this.plugin.saveSettings();
+					});
+				text.inputEl.style.width = '100%';
+				text.inputEl.style.fontFamily = 'monospace';
+			});
+
+		// Add pattern examples
+		const patternExamplesEl = containerEl.createDiv({ cls: 'setting-item-description' });
+		patternExamplesEl.style.marginTop = '-10px';
+		patternExamplesEl.style.marginBottom = '20px';
+		patternExamplesEl.style.fontStyle = 'italic';
+		patternExamplesEl.style.color = 'var(--text-muted)';
+		
+		const examplesTitle = patternExamplesEl.createEl('div', { text: 'Pattern Examples:' });
+		examplesTitle.style.fontWeight = 'bold';
+		examplesTitle.style.marginBottom = '5px';
+		
+		const patternExamplesList = patternExamplesEl.createEl('ul');
+		patternExamplesList.style.margin = '0';
+		patternExamplesList.style.paddingLeft = '20px';
+		
+		const examples = [
+			'[[vocab.{}|{}]] → [[vocab.apple|apple]]',
+			'[[{}]] → [[apple]]', 
+			'[[dictionary/{}|{}]] → [[dictionary/apple|apple]]',
+			'[[{}-definition|{}]] → [[apple-definition|apple]]',
+			'[[words.{}]] → [[words.apple]]'
+		];
+		
+		examples.forEach(example => {
+			const li = patternExamplesList.createEl('li', { text: example });
+			li.style.fontSize = '0.9em';
+			li.style.margin = '2px 0';
+		});
+
 		// Help section
 		const helpEl = containerEl.createDiv();
 		helpEl.createEl('h3', { text: 'Setup Instructions' });
@@ -324,7 +389,11 @@ class VocabGenSettingTab extends PluginSettingTab {
 		reportEl.createEl('h4', { text: 'Report Issue:' });
 		const reportList = reportEl.createEl('ul');
 		reportList.createEl('li', { text: 'Open an issue on GitHub' });
-		reportList.createEl('li', { text: 'https://github.com/quangliz/vocab-gen-obsidian/issues' });
+		const linkItem = reportList.createEl('li');
+		linkItem.createEl('a', {
+			text: 'Link to issue',
+			href: 'https://github.com/quangliz/vocab-gen-obsidian/issues'
+		});
 		
 		// API Key link
 		const linkEl = helpEl.createEl('p');
