@@ -25,14 +25,14 @@ An AI-powered Obsidian plugin that automatically generates comprehensive vocabul
 - Obsidian(yeah ofcourse)
 - Google Gemini API key (it's free if you're broke)
 - Internet connection for AI generation
-
+- Suggest using [Auto Note Mover](https://github.com/farux/obsidian-auto-note-mover) plugin for automatically moving note to a specific folder
 ## ⚙️ Installation
 
 ### Manual Installation
 1. Download the latest release from GitHub
 or clone this repo:
 ```
-git clone https://github.com/quangliz/vocab-gen.git
+git clone https://github.com/quangliz/vocab-gen-obsidian.git
 ```
 2. Extract/Move folder to `.obsidian/plugins/`
 3. Enable the plugin in Obsidian settings
@@ -140,7 +140,7 @@ Here's a detailed vocabulary breakdown for "serendipity":
 ### Building from Source
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/obsidian-vocab-generator
+git clone https://github.com/quangliz/vocab-gen-obsidian.git
 
 # Install dependencies
 npm install
@@ -211,8 +211,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🐛 Support
 
-- **Issues**: Report bugs on [GitHub Issues](https://github.com/yourusername/obsidian-vocab-generator/issues)
-- **Discussions**: Join conversations in [GitHub Discussions](https://github.com/yourusername/obsidian-vocab-generator/discussions)
+- **Issues**: Report bugs on [GitHub Issues](https://github.com/quangliz/vocab-gen-obsidian/issues)
+- **Discussions**: Join conversations in [GitHub Discussions](https://github.com/quangliz/vocab-gen-obsidian/discussions)
 - **Documentation**: Check this README for usage help
 
 ## 🙏 Acknowledgments

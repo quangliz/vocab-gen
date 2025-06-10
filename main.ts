@@ -318,7 +318,14 @@ class VocabGenSettingTab extends PluginSettingTab {
 		examplesList.createEl('li', { text: 'I want definition of {} and its synonyms' });
 		examplesList.createEl('li', { text: 'Explain {} in simple terms with 3 example sentences' });
 		examplesList.createEl('li', { text: 'Generate academic vocabulary entry for: {}' });
-
+		
+		// Report issue link
+		const reportEl = helpEl.createDiv();
+		reportEl.createEl('h4', { text: 'Report Issue:' });
+		const reportList = reportEl.createEl('ul');
+		reportList.createEl('li', { text: 'Open an issue on GitHub' });
+		reportList.createEl('li', { text: 'https://github.com/quangliz/vocab-gen-obsidian/issues' });
+		
 		// API Key link
 		const linkEl = helpEl.createEl('p');
 		linkEl.appendText('Get your API key: ');
