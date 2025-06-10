@@ -314,11 +314,16 @@ class VocabGenSettingTab extends PluginSettingTab {
 						this.plugin.settings.prompt = value;
 						await this.plugin.saveSettings();
 					});
-				// Make the text area larger and more readable
+				// Make the text area more flexible and user-friendly
 				text.inputEl.style.width = '100%';
-				text.inputEl.style.height = '120px';
+				text.inputEl.style.minWidth = '400px';
+				text.inputEl.style.minHeight = '150px';
 				text.inputEl.style.resize = 'vertical';
 				text.inputEl.style.fontFamily = 'monospace';
+				text.inputEl.style.padding = '10px';
+				text.inputEl.style.lineHeight = '1.5';
+				text.inputEl.style.tabSize = '4';
+				text.inputEl.style.overflowY = 'auto';
 			});
 
 		// Note Naming Pattern Setting
